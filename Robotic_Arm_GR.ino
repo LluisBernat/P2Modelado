@@ -1,29 +1,38 @@
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                LIBRERÍAS                                                  //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "MeMegaPi.h"
 #include <Servo.h>
+// Para implementar la cinemática directa:
+#include "MatrixMath.h"
+#include <Math.h>
 
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                VARIABLES                                                  //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 MePort limitSwitch(PORT_7);
 Servo svs[1] = {Servo()};
 MeStepperOnBoard steppers[3] = {MeStepperOnBoard(PORT_1),MeStepperOnBoard(PORT_2),MeStepperOnBoard(PORT_3)}; 
 
-float qlimit_0[2] = {0.0,0.0}; //ToDo
-float qlimit_1[2] = {0.0,0.0}; //ToDo
-float qlimit_2[2] = {0.0,0.0}; //ToDo
+// Vectores para guadrar los límites de las articulaciones que calcularemos
+float qlimit_0[2] = {0.0,0.0};
+float qlimit_1[2] = {0.0,0.0};
+float qlimit_2[2] = {0.0,0.0};
 
-struct Vector3
-{
+struct Vector3{
   double x;
   double y; 
   double z;
 };
 
-float lastPositions[3] = {0,0,0};
-const double RADS = PI / 180.0;
-const double DEGS = 180.0 / PI;
-const int STEPS = 2;
-const int GEAR_1 = 9;
-const int GEAR_2 = 7;
+float lastPositions[3] = {0,0,0}; // Vector para meter el target de la posición
+const double RADS = PI / 180.0;   // Pasar de radianes a segundos
+const double DEGS = 180.0 / PI;   // Pasar de grados a segundos
+const int STEPS = 2;              // Microsteps
+const int GEAR_1 = 9;             // Relaciones de transmisión (mecanismos engranajes-eslabón) de la base
+const int GEAR_2 = 7;             // Relación de transmisiópn (mecanismos engranajes-eslabón) de los otros dos motores
 
+// Longitudes de los eslabones
 const double L1 = 150.0; 
 const double L2 = 155.0; 
 const double L3 = 200.0;
@@ -44,17 +53,20 @@ int maxSpeed = 500;
 int currentAcceleration = 1000;
 int pin1, pin2;
 
-void setup() {
-  
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                  SETUP                                                    //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void setup(){
   //Puerto serie
   Serial.begin(115200);
 
   //Configuración motores paso a paso
   setSpeedConfiguration(currentSpeed,maxSpeed,currentAcceleration);
-  
+
+  // Configuración steppers
   for(int i=0;i<3;i++){
-    steppers[i].setMicroStep(STEPS);
-    steppers[i].enableOutputs();
+    steppers[i].setMicroStep(STEPS);  // MicroStep <-- 2
+    steppers[i].enableOutputs();      // Habilito las salidas
   }
 
   //Sensores finales de carrera
@@ -62,29 +74,31 @@ void setup() {
   pin2 = limitSwitch.pin2();
   pinMode(pin1,INPUT_PULLUP);
   pinMode(pin2,INPUT_PULLUP);
+    // pin1,pin2 = 1 o 0 dependiendo si la salida está activada o no
   
   //Pinza. Configuración servo 
-  svs[0].attach(A8);
+  svs[0].attach(A8);  // Asigno el servo a donde está cableado
+    // Inicialmente, se abre y se cierra la pinza:
   open_grip();
   delay(1000);
   close_grip();
-  
 }
 
-
-void loop() {
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                  LOOP                                                     //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void loop(){
   //Lectura del puerto serie y filtrado del comando
   if (Serial.available()) {
-     char c = Serial.read();
-     if (c == '\n') {
-      parseBuffer();
-    } else {
+     char c = Serial.read();  // Lee lo que hay en el puerto serial
+     if(c == '\n') {
+      parseBuffer();          // Esta función lo filtra
+    }else{
       buffer += c;
     }
   }
 
-  //Visualización finales de carrera
+  //Visualización finales de carrera (lee los sensores)
   sensor1 = digitalRead(pin1);
   Serial.println(sensor1);
   sensor2 = digitalRead(pin2);
@@ -94,15 +108,15 @@ void loop() {
   //Permito corriente a los motores en un movimiento
   long isMoving = 0;
   for(int i=0;i<3;i++){
-      isMoving += abs(steppers[i].distanceToGo());
-      steppers[i].run();
+      isMoving += abs(steppers[i].distanceToGo());  // Mientras "haya distancia a recorrer"
+      steppers[i].run();                            // Sigue moviendo el motor
   }
-  if(isMoving>0){
-      endMoving = true;
-  }
-  else{
-      if(endMoving){
-         endMoving = false;
+  if(isMoving>0){             // Aún no ha recorrido la distancia
+      endMoving = true;       // Tiene que seguir moviéndose
+  }else{
+      if(endMoving){          // Ya ha recorrido la distancia
+         endMoving = false;   // Deja de moverse
+         // Guarda la posición actual:
          steppers[0].setCurrentPosition(lastPositions[0]);
          steppers[1].setCurrentPosition(lastPositions[1]);
          steppers[2].setCurrentPosition(lastPositions[2]);
@@ -110,8 +124,10 @@ void loop() {
   }
 }
 
-void parseBuffer() {
-  
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                FUNCIONES                                                  //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void parseBuffer(){ // Función que filtra lo que hay por el puerto serie
   buffer =" "+buffer+" ";
   buffer.toLowerCase();
 
@@ -129,7 +145,7 @@ void parseBuffer() {
   bool closeEnable = false;
   
   //Filtrado del mensaje por el puerto serie
-  while (true) {
+  while(true){
     startIndex = buffer.indexOf(" ", endIndex);
     endIndex = buffer.indexOf(" ", startIndex + 1);
     tmp = buffer.substring(startIndex + 1, endIndex);
@@ -138,18 +154,15 @@ void parseBuffer() {
       values[0] = tmp.substring(2, tmp.length());
       Serial.println(values[0]);
       move_q1(stringToFloat(values[0]));
-    }
-    else if(tmp.indexOf("open",0)>-1){
+    }else if(tmp.indexOf("open",0)>-1){
        openEnable = true;
-    }
-    else if(tmp.indexOf("close",0)>-1){
+    }else if(tmp.indexOf("close",0)>-1){
       closeEnable = true;
     }
     count++;
-    
+ 
     if (endIndex == len - 1) break;
   }
-
 
   //Acciones a realizar tras el filtrado del puerto serie
   if(closeEnable){
@@ -158,11 +171,9 @@ void parseBuffer() {
      open_grip();
   }
 
-  Serial.println("OK");
+  Serial.println("OK"); // Indica que el filtrado se ha realizado correctamente
   buffer = "";
 }
-
-
 
 //Establecer velocidad de los motores
 void setSpeedConfiguration(float c_speed, float max_speed, float accel){
@@ -178,13 +189,11 @@ void setSpeedConfiguration(float c_speed, float max_speed, float accel){
 void runServo(int index,int angle){
   svs[index].write(angle);
 }
-
-void close_grip(){
+void close_grip(){  // Cierra la pinza
  runServo(0,120);
  delay(100);
 }
-
-void open_grip(){
+void open_grip(){   // Abre la pinza
  runServo(0,0);
  delay(100);
 }
@@ -195,11 +204,11 @@ float stringToFloat(String s){
   return f;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                      ****** FUNCIONES A IMPLEMENTAR POR EL GRUPO DE ALUMNOS ******                        //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//******FUNCIONES A IMPLEMENTAR POR EL GRUPO DE ALUMNOS****//
-
-//Busqueda de límites del robot
-
+// Busqueda de límites del robot //////////////////////////////////////////////////////////////////////////////
 //Límites eje 1 - establecerlo en -90,90
 void reset_stepper0(){
  
@@ -207,7 +216,6 @@ void reset_stepper0(){
 
 //Límites eje 2 - ejemplo
 void reset_stepper1(){
-  
   int count_steps1 = 0;
   int count_steps2 = 0;
   steppers[1].setSpeed(testSpeed);
@@ -219,8 +227,7 @@ void reset_stepper1(){
       steppers[1].step();
       delay(10);
       count_steps1++;
-    }
-    else{
+    }else{
       qlimit_1[0] = count_steps1*1.8/(GEAR_2*STEPS);
       Serial.println(qlimit_1[0]);
       exit1=false;
@@ -235,8 +242,7 @@ void reset_stepper1(){
       steppers[1].step();
       delay(10);
       count_steps2++;
-    }
-    else{
+    }else{
       qlimit_1[1] = -(count_steps2-count_steps1)*1.8/(GEAR_2*STEPS);
       Serial.println(qlimit_1[1]);
       exit2=false;
@@ -254,40 +260,55 @@ void reset_stepper2(){
     
 }
 
-
-//Punto inicial y vuelta a la posición de home
-void setHome(){
- 
+// Punto inicial y vuelta a la posición de home ///////////////////////////////////////////////////////////////
+// Establece/guarda la posición actual como home (se tiene que ejecutar al inicio)
+void setHome(){   
 }
 
-void goHome(){
-
-}
-
-
-//Cinemática directa. Movimiento en q1,q2,q3
-void move_q1(float q1){
+// Ir a la posición Home
+void goHome(){    
 
 }
 
-void move_q2(float q2){
+// Cinemática directa. Movimiento en q1,q2,q3 (mueven los ejes del robot) /////////////////////////////////////
+void move_q1(float q1){ // q1 se introduce en grados
+  // Comprobar q1 está en los límites establecidos
+  // Pasar q1 de Grados a Pasos
+  // Uso de la función steppers[n].moveTo(steps) para mover el eje
+  // Actualizar el vector lastPositions con los pasos calculados
+}
+
+void move_q2(float q2){ // q2 se introduce en grados
+  // Comprobar q1 está en los límites establecidos
+  // Pasar q1 de Grados a Pasos
+  // Uso de la función steppers[n].moveTo(steps) para mover el eje
+  // Actualizar el vector lastPositions con los pasos calculados
+}
+
+void move_q3(float q3){ // q3 se introduce en grados
+  // Comprobar q1 está en los límites establecidos
+  // Pasar q1 de Grados a Pasos
+  // Uso de la función steppers[n].moveTo(steps) para mover el eje
+  // Actualizar el vector lastPositions con los pasos calculados
+}
+
+void moveToAngles(float q1, float q2, float q3){ // Los valores de q se introducen en grados
+  move_q1(q1);
+  move_q2(q2);
+  move_q3(q3);
+}
+
+// Función que devuelve la matriz de transformación T entre Si-1 y Si
+void denavit(float q, float d, float a, float alfa){
   
 }
 
-void move_q3(float q3){
+// Función que utiliza la función denavit, para calcular 0T3 (base-extremo)
+void forwardKinematics (float q1, float q2, float q3){
   
 }
 
-void moveToAngles(float q1, float q2, float q3){
-  
-}
-
-Vector3 forwardKinematics (float q1, float q2, float q3){
-  
-}
-
-
-//Cinemática inversa. Movimiento en x,y,z
+// Cinemática inversa. Movimiento en x,y,z ////////////////////////////////////////////////////////////////////
 void moveToPoint(float x,float y,float z){
  
 }
@@ -297,7 +318,7 @@ Vector3 inverseKinematics(float x,float y,float z){
 }
 
 
-//Trayectoria y tarea p&p
+// Trayectoria y tarea p&p ////////////////////////////////////////////////////////////////////////////////////
 void trajectory (float q1, float q2, float q3, float t){
   
 }
@@ -305,4 +326,3 @@ void trajectory (float q1, float q2, float q3, float t){
 void pick_and_place (){
 
 }
-
