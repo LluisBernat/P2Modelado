@@ -273,12 +273,12 @@ void move_q1(float q1){ // q1 se introduce en grados
     // Pasar q1 de Grados a Pasos
     float p1 = Step2Grad(q1);
     // Uso de la función steppers[n].moveTo(steps) para mover el eje
-    steppers[0].moveTo(lastPositions[0]+p1);
-    // Actualizar el vector lastPositions con los pasos calculados
-    lastPositions[0] += p1;
-      // Otra opcición: lastPositions[0] = steppers[0].targetPosition();
+    steppers[0].moveTo(steppers[0].currentPosition() + p1);
+    // Actualizar currentPosition con los pasos calculados
+    steppers[0].setCurrentPosition(steppers[0].currentPosition() + p1);
+      // Otra opcición: steppers[0].setCurrentPosition(steppers[0].targetPosition());
   }else{
-    Serial.println("q1 fuera lo los límites establecidos");
+    Serial.println("q1 fuera lo los límites del robot");
   }
 }
 
@@ -288,12 +288,12 @@ void move_q2(float q2){ // q2 se introduce en grados
     // Pasar q2 de Grados a Pasos
     float p2 = Step2Grad(q2);
     // Uso de la función steppers[n].moveTo(steps) para mover el eje
-    steppers[1].moveTo(lastPositions[1]+p1);
-    // Actualizar el vector lastPositions con los pasos calculados
-    lastPositions[1] += p2;
-      // Otra opcición: lastPositions[1] = steppers[1].targetPosition();
+    steppers[1].moveTo(steppers[1].currentPosition() + p2);
+    // Actualizar currentPosition con los pasos calculados
+    steppers[1].setCurrentPosition(steppers[1].currentPosition() + p2);
+      // Otra opcición: steppers[1].setCurrentPosition(steppers[1].targetPosition());
   }else{
-    Serial.println("q2 fuera lo los límites establecidos");
+    Serial.println("q2 fuera lo los límites del robot");
   }
 }
 
@@ -306,14 +306,20 @@ void move_q3(float q3){ // q3 se introduce en grados
 
 // III. Movimiente de q1,q2 y q3 (mueve todos los ejes del robot) /////////////////////////////////////////////
 void moveToAngles(float q1, float q2, float q3){ // Los valores de q se introducen en grados
-  move_q1(q1);
-  move_q2(q2);
-  move_q3(q3);
+  if(q1 < qlimit_0[0] && q1 > qlimit_0[1] && q2 < qlimit_1[0] && q2 > qlimit_1[1] && q3 < qlimit_2[0] && q3 > qlimit_2[1]){
+    move_q1(q1);
+    move_q2(q2);
+    move_q3(q3);
+  }else{
+    Serial.println("Los valores articualres no están dentro de los límites del robot");
+  }
+  
 }
 
 // IV. Punto inicial y vuelta a la posición de home ///////////////////////////////////////////////////////////
-// Establece/guarda la posición actual como home (se tiene que ejecutar al inicio)
-void setHome(){   
+// Establece/guarda la posición actual como Home (Home se entiende como la posición origen)
+void setHome(){
+  
 }
 
 // Ir a la posición Home
