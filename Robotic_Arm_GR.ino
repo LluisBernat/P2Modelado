@@ -46,9 +46,9 @@ int sensor1, sensor2;
 Vector3 vectorToAngles(float x,float y,float z);
 void setSpeed(float speed);
 
-int testSpeed = 200;
+int testSpeed = 150;
 int testAcceleration = 300;
-int currentSpeed = 350;
+int currentSpeed = 400;
 int maxSpeed = 500;
 int currentAcceleration = 1000;
 int pin1, pin2;
@@ -177,7 +177,7 @@ void parseBuffer(){ // Función que filtra lo que hay por el puerto serie
 
 //Establecer velocidad de los motores
 void setSpeedConfiguration(float c_speed, float max_speed, float accel){
-    for(int i=0;i<3;i++){
+    for(int i=0,i<3;i++){
         steppers[i].setSpeed(c_speed);
         steppers[i].setMaxSpeed(max_speed);
         steppers[i].setAcceleration(accel);
@@ -208,10 +208,16 @@ float stringToFloat(String s){
 //                      ****** FUNCIONES A IMPLEMENTAR POR EL GRUPO DE ALUMNOS ******                        //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Busqueda de límites del robot //////////////////////////////////////////////////////////////////////////////
+// I. Busqueda de límites del robot (en grados) ///////////////////////////////////////////////////////////////
 //Límites eje 1 - establecerlo en -90,90
 void reset_stepper0(){
- 
+  qlimit_0[0] = 90;
+  Serial.println(qlimit_0[0]);
+  
+  qlimit_0[1] = -90;
+  Serial.println(qlimit_0[1]);
+  
+  steppers[0].setCurrentPosition(0.0);  // Establece la posición actual como el 0 (origen)
 }
 
 //Límites eje 2 - ejemplo
@@ -257,25 +263,19 @@ void reset_stepper1(){
 
 //Límites eje 3
 void reset_stepper2(){
-    
+    // q3 depende de q2 --> los límites de ambas deben coincidir ??? Esto no lo acabo de entender
 }
 
-// Punto inicial y vuelta a la posición de home ///////////////////////////////////////////////////////////////
-// Establece/guarda la posición actual como home (se tiene que ejecutar al inicio)
-void setHome(){   
-}
-
-// Ir a la posición Home
-void goHome(){    
-
-}
-
-// Cinemática directa. Movimiento en q1,q2,q3 (mueven los ejes del robot) /////////////////////////////////////
+// II. Movimiento en q1,q2,q3 (mueven los ejes del robot) /////////////////////////////////////////////////////
 void move_q1(float q1){ // q1 se introduce en grados
   // Comprobar q1 está en los límites establecidos
-  // Pasar q1 de Grados a Pasos
+  if( q1 < qlimit_0[0] || q1 > qlimit_0[1] ){
+    // Pasar q1 de Grados a Pasos
   // Uso de la función steppers[n].moveTo(steps) para mover el eje
   // Actualizar el vector lastPositions con los pasos calculados
+  }else{
+    Serial.println("q1 fuera lo los límites establecidos");
+  }
 }
 
 void move_q2(float q2){ // q2 se introduce en grados
@@ -292,23 +292,35 @@ void move_q3(float q3){ // q3 se introduce en grados
   // Actualizar el vector lastPositions con los pasos calculados
 }
 
+// III. Movimiente de q1,q2 y q3 (mueve todos los ejes del robot) /////////////////////////////////////////////
 void moveToAngles(float q1, float q2, float q3){ // Los valores de q se introducen en grados
   move_q1(q1);
   move_q2(q2);
   move_q3(q3);
 }
 
+// IV. Punto inicial y vuelta a la posición de home ///////////////////////////////////////////////////////////
+// Establece/guarda la posición actual como home (se tiene que ejecutar al inicio)
+void setHome(){   
+}
+
+// Ir a la posición Home
+void goHome(){    
+
+}
+
+// V. Cinemática directa. Movimiento en q1,q2,q3 (mueven los ejes del robot) //////////////////////////////////
 // Función que devuelve la matriz de transformación T entre Si-1 y Si
 void denavit(float q, float d, float a, float alfa){
   
 }
 
 // Función que utiliza la función denavit, para calcular 0T3 (base-extremo)
-void forwardKinematics (float q1, float q2, float q3){
+Vector3 forwardKinematics (float q1, float q2, float q3){
   
 }
 
-// Cinemática inversa. Movimiento en x,y,z ////////////////////////////////////////////////////////////////////
+// VI. Cinemática inversa. Movimiento en x,y,z ////////////////////////////////////////////////////////////////
 void moveToPoint(float x,float y,float z){
  
 }
@@ -316,7 +328,6 @@ void moveToPoint(float x,float y,float z){
 Vector3 inverseKinematics(float x,float y,float z){
  
 }
-
 
 // Trayectoria y tarea p&p ////////////////////////////////////////////////////////////////////////////////////
 void trajectory (float q1, float q2, float q3, float t){
