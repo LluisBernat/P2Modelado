@@ -348,7 +348,23 @@ float[][] denavit(float q, float d, float a, float alfa){
 
 // Función que utiliza la función denavit, para calcular 0T3 (base-extremo)
 Vector3 forwardKinematics (float q1, float q2, float q3){
+  float valArt[3][1] = {{q1},{q2},{q3},{0}};
+  float result[3][1];
+  float 0T1[4][4] = denavit(q1,L1,0,-90);
+  float 1T2[4][4] = denavit(q2,0,L2,0);
+  float 2T3[4][4] = denavit(q3,0,L3,0);
+  float aux[4][4];
+  float 0T3[4][4];
+  Vector3 extremo;
   
+  MatrixMult(0T1,1T2,4,4,4,aux);
+  MatrixMult(aux,2T3,4,4,4,0T3);
+  MatrixMult(0T3,valArt,4,4,1,result);
+  extremo.x = result[0][0];
+  extremo.y = result[1][0];
+  extremo.z = result[2][0];
+  
+  return extremo;
 }
 
 // VI. Cinemática inversa. Movimiento en x,y,z ////////////////////////////////////////////////////////////////
