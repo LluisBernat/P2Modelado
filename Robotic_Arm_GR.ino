@@ -4,7 +4,7 @@
 #include "MeMegaPi.h"
 #include <Servo.h>
 // Para implementar la cinemática directa:
-#include "MatrixMath.h"
+#include <MatrixMath.h>
 #include <Math.h>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -19,11 +19,11 @@ float qlimit_0[2] = {0.0,0.0};
 float qlimit_1[2] = {0.0,0.0};
 float qlimit_2[2] = {0.0,0.0};
 
-struct Vector3{
+typedef struct{
   double x;
   double y; 
   double z;
-};
+} Vector3;
 
 // Variable para guardar la posición de Home
 Vector3 HomeGrad; // Guarda los valores articulares
@@ -338,8 +338,12 @@ void goHome(){
 
 // V. Cinemática directa. Movimiento en q1,q2,q3 (mueven los ejes del robot) //////////////////////////////////
 // Función que devuelve la matriz de transformación T entre Si-1 y Si
-void denavit(float q, float d, float a, float alfa){
-  
+float[][] denavit(float q, float d, float a, float alfa){
+  float T[4][4] = {{cos(q),-cos(alfa)*sin(q),sin(alfa)*sin(q),a*cos(q)},
+                   {sin(q),cos(alfa)*cos(q),-sin(alfa)*cos(q),a*sen(q)},
+                   {0     ,sin(alfa)       ,cos(alfa)        ,d       },
+                   {0     ,0               ,0                ,1       }};
+  return T;
 }
 
 // Función que utiliza la función denavit, para calcular 0T3 (base-extremo)
