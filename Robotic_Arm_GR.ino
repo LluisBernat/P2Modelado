@@ -270,7 +270,43 @@ void reset_stepper1(){
 
 //Límites eje 3
 void reset_stepper2(){
-    // q3 depende de q2 --> los límites de ambas deben coincidir ??? Esto no lo acabo de entender
+  int count_steps1 = 0;
+  int count_steps2 = 0;
+  steppers[2].setSpeed(testSpeed);
+  bool exit1=true;
+  bool exit2=true;
+  
+  while(exit1){
+    if(digitalRead(pin2)==LOW){
+      steppers[2].step();
+      delay(10);
+      count_steps1++;
+    }else{
+      qlimit_2[0] = count_steps1*1.8/(GEAR_2*STEPS);
+      Serial.println(qlimit_2[0]);
+      exit1=false;
+    }
+  }
+  
+  steppers[2].setSpeed(-testSpeed);
+  delay(2000);
+  
+  while(exit2){
+    if(digitalRead(pin2)==LOW){
+      steppers[2].step();
+      delay(10);
+      count_steps2++;
+    }else{
+      qlimit_2[1] = -(count_steps2-count_steps1)*1.8/(GEAR_2*STEPS);
+      Serial.println(qlimit_2[1]);
+      exit2=false;
+    }
+  }
+
+  steppers[2].setCurrentPosition(-(count_steps2-count_steps1));
+  delay(1000);
+  move_q3(0.0);
+  delay(1000);
 }
 
 // II. Movimiento en q1,q2,q3 (mueven los ejes del robot) /////////////////////////////////////////////////////
