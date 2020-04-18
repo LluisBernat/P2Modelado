@@ -389,7 +389,8 @@ Vector3 forwardKinematics (float q1, float q2, float q3){
 
 // VI. Cinemática inversa. Movimiento en x,y,z ////////////////////////////////////////////////////////////////
 void moveToPoint(float x,float y,float z){
- 
+  Vector3 valArt = inverseKinematics(x,y,z);
+  moveToAngles(valArt.x,valArt.y,valArt.z);
 }
 
 Vector3 inverseKinematics(float x,float y,float z){
