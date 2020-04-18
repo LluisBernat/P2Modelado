@@ -339,10 +339,10 @@ void goHome(){
 // V. Cinemática directa. Movimiento en q1,q2,q3 (mueven los ejes del robot) //////////////////////////////////
 // Función que devuelve la matriz de transformación T entre Si-1 y Si
 float[][] denavit(float q, float d, float a, float alfa){
-  float T[4][4] = {{cos(q),-cos(alfa)*sin(q),sin(alfa)*sin(q),a*cos(q)},
-                   {sin(q),cos(alfa)*cos(q),-sin(alfa)*cos(q),a*sen(q)},
-                   {0     ,sin(alfa)       ,cos(alfa)        ,d       },
-                   {0     ,0               ,0                ,1       }};
+  float T[4][4] = {{cos(q),-cos(alfa)*sin(q),sin(alfa)*sin(q) ,a*cos(q)},
+                   {sin(q),cos(alfa)*cos(q) ,-sin(alfa)*cos(q),a*sen(q)},
+                   {0     ,sin(alfa)        ,cos(alfa)        ,d       },
+                   {0     ,0                ,0                ,1       }};
   return T;
 }
 
@@ -367,19 +367,45 @@ Vector3 forwardKinematics (float q1, float q2, float q3){
   return extremo;
 }
 
+/*
+ * En vez de utilizar 2 funciones para la cienmática directa (denavit y forwardKinematics), podemos hacerlo con una única función:
+ * Vector3 forwardKinematics(float q1, float q2, float q3){
+ *  float 0T3[4][4] = {{0,0,0,0},   // Sacar a mano la matriz 0T3 y la introducimos directamente (ahorrándonos así la función denavit)
+ *                     {0,0,0,0},
+ *                     {0,0,0,0},
+ *                     {0,0,0,0}};
+ *  float valArt[3][1] = {{q1},{q2},{q3},{0}};
+ *  float result[3][1];
+ *  Vector3 extremo;
+ * 
+ *  MatrixMult(0T3,valArt,4,4,1,result);
+ *  extremo.x = result[0][0];
+ *  extremo.y = result[1][0];
+ *  extremo.z = result[2][0];
+ * 
+ *  return extremo;
+ * }
+ */
+
 // VI. Cinemática inversa. Movimiento en x,y,z ////////////////////////////////////////////////////////////////
 void moveToPoint(float x,float y,float z){
  
 }
 
 Vector3 inverseKinematics(float x,float y,float z){
- 
+  Vector3 valArt;
+
+  valArt.x = atan2(x,y);                                                                       // q1
+  valArt.z = acos((pow(z-L1,2)+pow(x,2)+pow(y,2)-pow(L2,2)-pow(L3,2))/(2*L2*L3))               // q3
+  valArt.y = atan2(sqrt(pow(x,2)+pow(y,2)),z-L1)-atan2(L3*sin(valArt.z),L2+L3*sin(valArt.z))   // q2
+  
+  return valArt;
 }
 
 // Trayectoria y tarea p&p ////////////////////////////////////////////////////////////////////////////////////
 void trajectory (float q1, float q2, float q3, float t){
-  
-}
+
+} 
 
 void pick_and_place (){
 
