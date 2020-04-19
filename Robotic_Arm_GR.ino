@@ -25,13 +25,6 @@ typedef struct{
   double z;
 } Vector3;
 
-// Variable para guardar la posición de Home
-Vector3 HomeGrad; // Guarda los valores articulares
-  // Inicializamos la variable Home
-HomeGrad.x = 0.0;
-HomeGrad.y = 0.0;
-HomeGrad.z = 0.0;
-
 float lastPositions[3] = {0,0,0}; // Vector para meter el target de la posición
 const double RADS = PI / 180.0;   // Pasar de radianes a segundos
 const double DEGS = 180.0 / PI;   // Pasar de grados a segundos
@@ -374,9 +367,18 @@ void moveToAngles(float q1, float q2, float q3){ // Los valores de q se introduc
 // IV. Punto inicial y vuelta a la posición de home ///////////////////////////////////////////////////////////
 // Establece/guarda la posición actual como Home (Home se entiende como la posición origen)
 void setHome(){
-  HomeGrad.x = steppers[0].currentPosition();
-  HomeGrad.y = steppers[1].currentPosition();
-  HomeGrad.z = steppers[2].currentPosition();
+  qlimit_0[0] = qlimit_0[0] - steppers[0].currentPosition();
+  qlimit_0[1] = qlimit_0[1] - steppers[0].currentPosition();
+  
+  qlimit_2[0] = qlimit_1[0] - steppers[1].currentPosition();
+  qlimit_2[1] = qlimit_1[1] - steppers[1].currentPosition();
+  
+  qlimit_2[0] = qlimit_2[0] - steppers[2].currentPosition();
+  qlimit_2[1] = qlimit_2[1] - steppers[2].currentPosition();
+
+  steppers[0].setCurrentPosition(0.0);
+  steppers[1].setCurrentPosition(0.0);
+  steppers[2].setCurrentPosition(0.0);
 }
 
 // Ir a la posición Home
