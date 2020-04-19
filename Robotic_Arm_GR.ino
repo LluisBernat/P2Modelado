@@ -451,11 +451,17 @@ void pick_and_place (){
 // Otras funciones ////////////////////////////////////////////////////////////////////////////////////////////
 // Función para pasar de grados a pasos
 float Step2Grad(float Grad){
-  float Step = Grad;
+  float Step;
+  
+  Step = Grad / 1.8;
+  
   return Step;
 }
 // Función para pasar de pasos a grados
 float Grad2Step(float Step){
-  float Grad = Step;
+  float Grad;
+  
+  Grad = Step * 1.8;
+  
   return Grad;
 }
