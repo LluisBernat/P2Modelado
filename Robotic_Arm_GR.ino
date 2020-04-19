@@ -311,10 +311,10 @@ void reset_stepper2(){
 
 // II. Movimiento en q1,q2,q3 (mueven los ejes del robot) /////////////////////////////////////////////////////
 void move_q1(float q1){ // q1 se introduce en grados
-  // Comprobar q1 está en los límites establecidos
-  if( q1 < qlimit_0[0] && q1 > qlimit_0[1] ){
-    // Pasar q1 de Grados a Pasos
-    float p1 = Step2Grad(q1);
+  // Pasar q1 de Grados a Pasos
+  float p1 = Grad2Step(q1);
+  // Comprobar que estará en los límites establecidos
+  if( (steppers[0].currentPosition() + p1) < Grad2Step(qlimit_0[0]) && (steppers[0].currentPosition() + p1) > Grad2Step(qlimit_0[1]) ){
     // Uso de la función steppers[n].moveTo(steps) para mover el eje
     steppers[0].moveTo(steppers[0].currentPosition() + p1);
     // Actualizar currentPosition con los pasos calculados
@@ -326,25 +326,37 @@ void move_q1(float q1){ // q1 se introduce en grados
 }
 
 void move_q2(float q2){ // q2 se introduce en grados
-  // Comprobar q2 está en los límites establecidos
-  if( q2 < qlimit_1[0] && q2 > qlimit_1[1] ){
-    // Pasar q2 de Grados a Pasos
-    float p2 = Step2Grad(q2);
+  // Pasar q2 de Grados a Pasos
+  float p2 = Grad2Step(q2);
+  // Comprobar que estará en los límites establecidos
+  if( (steppers[1].currentPosition() + p2) < Grad2Step(qlimit_1[0]) && (steppers[1].currentPosition() + p2) > Grad2Step(qlimit_1[1]) && ( (steppers[1].currentPosition() + p2) - steppers[2].currentPosition()) < Grad2Step(qlimit_2[0]) %% ( (steppers[1].currentPosition() + p2) - steppers[2].currentPosition()) > Grad2Step(qlimit_2[1]) ){  
     // Uso de la función steppers[n].moveTo(steps) para mover el eje
     steppers[1].moveTo(steppers[1].currentPosition() + p2);
     // Actualizar currentPosition con los pasos calculados
     steppers[1].setCurrentPosition(steppers[1].currentPosition() + p2);
+    steppers[2].setCurrentPosition( (steppers[1].currentPosition() + p2) - steppers[2].currentPosition());
       // Otra opcición: steppers[1].setCurrentPosition(steppers[1].targetPosition());
+      //                steppers[2].setCurrentPosition(steppers[1].targetPosition() - steppers[2].currentPosition());
+  }else if( (steppers[1].currentPosition() + p2) > Grad2Step(qlimit_1[0]) && (steppers[1].currentPosition() + p2) < Grad2Step(qlimit_1[1]) ){
+    Serial.println("q3 fuera lo los límites del robot");
   }else{
     Serial.println("q2 fuera lo los límites del robot");
   }
 }
 
 void move_q3(float q3){ // q3 se introduce en grados
-  // Comprobar q1 está en los límites establecidos
-  // Pasar q1 de Grados a Pasos
-  // Uso de la función steppers[n].moveTo(steps) para mover el eje
-  // Actualizar el vector lastPositions con los pasos calculados
+  // Pasar q3 de Grados a Pasos
+  float p3 = Grad2Step(q3);
+  // Comprobar que estará en los límites establecidos
+  if( (steppers[1].currentPosition() - (steppers[2].currentPosition() + p3) ) < Grad2Step(qlimit_2[0]) && (steppers[1].currentPosition() - (steppers[2].currentPosition() + p3) ) > Grad2Step(qlimit_2[1]) ){
+    // Uso de la función steppers[n].moveTo(steps) para mover el eje
+    steppers[2].moveTo(steppers[2].currentPosition() + p3);
+    // Actualizar currentPosition con los pasos calculados
+    steppers[2].setCurrentPosition(steppers[1].currentPosition() - (steppers[2].currentPosition() + p3) );
+      // Otra opcición: steppers[2].setCurrentPosition(steppers[1].currentPosition() - steppers[2].targetPosition());
+  }else{
+    Serial.println("q3 fuera lo los límites del robot");
+  }
 }
 
 // III. Movimiente de q1,q2 y q3 (mueve todos los ejes del robot) /////////////////////////////////////////////
@@ -450,18 +462,12 @@ void pick_and_place (){
 
 // Otras funciones ////////////////////////////////////////////////////////////////////////////////////////////
 // Función para pasar de grados a pasos
-float Step2Grad(float Grad){
-  float Step;
-  
-  Step = Grad / 1.8;
-  
+float Grad2Step(float Grad){
+  float Step = Grad/1.8;
   return Step;
 }
 // Función para pasar de pasos a grados
-float Grad2Step(float Step){
-  float Grad;
-  
-  Grad = Step * 1.8;
-  
+float Step2Grad(float Step){
+  float Grad = Step*1.8;
   return Grad;
 }
