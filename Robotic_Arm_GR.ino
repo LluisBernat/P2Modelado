@@ -368,10 +368,16 @@ void move_q3(float q3){ // q3 se introduce en grados
 
 // III. Movimiente de q1,q2 y q3 (mueve todos los ejes del robot) /////////////////////////////////////////////
 void moveToAngles(float q1, float q2, float q3){ // Los valores de q se introducen en grados
-  if(q1 < qlimit_0[0] && q1 > qlimit_0[1] && q2 < qlimit_1[0] && q2 > qlimit_1[1] && q3 < qlimit_2[0] && q3 > qlimit_2[1]){
-    move_q1(q1);
-    move_q2(q2);
-    move_q3(q3);
+  float q1f, q2f, q3f;
+  
+  q1f = q1 - Step2Grad(steppers[0].currentPosition());
+  q2f = q2 - Step2Grad(steppers[1].currentPosition());
+  q3f = q3 - Step2Grad(steppers[2].currentPosition());
+  
+  if(q1f < qlimit_0[0] && q1f > qlimit_0[1] && q2f < qlimit_1[0] && q2f > qlimit_1[1] && q3f < qlimit_2[0] && q3f > qlimit_2[1]){
+    move_q1(q1f);
+    move_q2(q2f);
+    move_q3(q3f);
   }
   else{
     Serial.println("Los valores articulares no están dentro de los límites del robot");
@@ -403,7 +409,7 @@ void setHome(){
 
 // Ir a la posición Home
 void goHome(){    
-  moveToAngles(HomeGrad.x,HomeGrad.y,HomeGrad,z);
+  moveToAngles(0.0, 0.0, 0.0);
 }
 
 // V. Cinemática directa. Movimiento en q1,q2,q3 (mueven los ejes del robot) //////////////////////////////////
@@ -457,8 +463,15 @@ Vector3 forwardKinematics (float q1, float q2, float q3){
 
 // VI. Cinemática inversa. Movimiento en x,y,z ////////////////////////////////////////////////////////////////
 void moveToPoint(float x,float y,float z){
-  Vector3 valArt = inverseKinematics(x,y,z);
-  moveToAngles(valArt.x,valArt.y,valArt.z);
+  Vector3 valArt;
+  
+  valArt = inverseKinematics(x,y,z);
+  if(valArt.x < qlimit_0[0] && valArt.x > qlimit_0[1] && valArt.y < qlimit_1[0] && valArt.y > qlimit_1[1] && valArt.z < qlimit_2[0] && valArt.z > qlimit_2[1]){
+    moveToAngles(valArt.x,valArt.y,valArt.z);
+  }
+  else{
+   Serial.println("El punto no está dentro de los límites del robot");) 
+  }
 }
 
 Vector3 inverseKinematics(float x,float y,float z){
@@ -477,8 +490,21 @@ void trajectory (float q1, float q2, float q3, float t){
 
 } 
 
-void pick_and_place (){
-
+void pick_and_place(){
+  float xRecogida, yRecogida, zRecogida, xDestino, yDestino, zDestino;
+  //Suponemos que inicialmente el robot está en una posición cualquiera
+  //1. Nos aseguramos que la pinza está abierta
+  open_grid();
+  //2. Movemos el extremo a la posición donde se encuentra el objeto que queremos recoger.
+  moveToPoint(xObjeto, yObjeto, zObjeto); 
+  //3. Cerramos la pinza para recoger.
+  close_grid();
+  //4. Llevamos el objeto a la posición donde queremos dejarlo.
+  moveToPoint(xDestino, yDestino, zDestino);
+  //5. Abrimos para soltar el objeto.
+  open_grid();
+  //Hacemos que vuelva a la posición home
+  goHome();
 }
 
 // Otras funciones ////////////////////////////////////////////////////////////////////////////////////////////
