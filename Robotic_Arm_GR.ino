@@ -372,10 +372,10 @@ void moveToAngles(float q1, float q2, float q3){ // Los valores de q se introduc
     move_q1(q1);
     move_q2(q2);
     move_q3(q3);
-  }else{
-    Serial.println("Los valores articualres no están dentro de los límites del robot");
   }
-  
+  else{
+    Serial.println("Los valores articulares no están dentro de los límites del robot");
+  }
 }
 
 // IV. Punto inicial y vuelta a la posición de home ///////////////////////////////////////////////////////////
