@@ -282,7 +282,7 @@ void reset_stepper2(){
       delay(10);
       count_steps1++;
     }else{
-      qlimit_2[0] = count_steps1*1.8/(GEAR_2*STEPS);
+      qlimit_2[0] = qlimit_1[0] - count_steps1*1.8/(GEAR_2*STEPS);
       Serial.println(qlimit_2[0]);
       exit1=false;
     }
@@ -297,7 +297,7 @@ void reset_stepper2(){
       delay(10);
       count_steps2++;
     }else{
-      qlimit_2[1] = -(count_steps2-count_steps1)*1.8/(GEAR_2*STEPS);
+      qlimit_2[1] = -(qlimit_1[1] - (count_steps2-count_steps1)*1.8/(GEAR_2*STEPS));
       Serial.println(qlimit_2[1]);
       exit2=false;
     }
