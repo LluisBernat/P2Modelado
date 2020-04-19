@@ -14,7 +14,7 @@ MePort limitSwitch(PORT_7);
 Servo svs[1] = {Servo()};
 MeStepperOnBoard steppers[3] = {MeStepperOnBoard(PORT_1),MeStepperOnBoard(PORT_2),MeStepperOnBoard(PORT_3)}; 
 
-// Vectores para guadrar los límites de las articulaciones que calcularemos
+// Vectores para guardar los límites de las articulaciones que calcularemos
 float qlimit_0[2] = {0.0,0.0};
 float qlimit_1[2] = {0.0,0.0};
 float qlimit_2[2] = {0.0,0.0};
@@ -23,7 +23,7 @@ typedef struct{
   double x;
   double y; 
   double z;
-} Vector3;
+}Vector3;
 
 float lastPositions[3] = {0,0,0}; // Vector para meter el target de la posición
 const double RADS = PI / 180.0;   // Pasar de radianes a segundos
@@ -43,7 +43,7 @@ String buffer = "";
 bool endMoving = true;
 int sensor1, sensor2;
 
-Vector3 vectorToAngles(float x,float y,float z);
+Vector3 vectorToAngles(float x, float y, float z);
 void setSpeed(float speed);
 
 int testSpeed = 150;
@@ -64,7 +64,7 @@ void setup(){
   setSpeedConfiguration(currentSpeed,maxSpeed,currentAcceleration);
 
   // Configuración steppers
-  for(int i=0;i<3;i++){
+  for(int i = 0; i < 3; i++){
     steppers[i].setMicroStep(STEPS);  // MicroStep <-- 2
     steppers[i].enableOutputs();      // Habilito las salidas
   }
@@ -89,13 +89,14 @@ void setup(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void loop(){
   //Lectura del puerto serie y filtrado del comando
-  if (Serial.available()) {
+  if(Serial.available()){
      char c = Serial.read();  // Lee lo que hay en el puerto serial
-     if(c == '\n') {
+     if(c == '\n'){
       parseBuffer();          // Esta función lo filtra
-    }else{
-      buffer += c;
-    }
+     }
+     else{
+      buffer = buffer + c;
+     }
   }
 
   //Visualización finales de carrera (lee los sensores)
@@ -107,13 +108,14 @@ void loop(){
 
   //Permito corriente a los motores en un movimiento
   long isMoving = 0;
-  for(int i=0;i<3;i++){
-      isMoving += abs(steppers[i].distanceToGo());  // Mientras "haya distancia a recorrer"
+  for(int i = 0; i < 3; i++){
+      isMoving = isMoving + abs(steppers[i].distanceToGo());  // Mientras "haya distancia a recorrer"
       steppers[i].run();                            // Sigue moviendo el motor
   }
   if(isMoving>0){             // Aún no ha recorrido la distancia
       endMoving = true;       // Tiene que seguir moviéndose
-  }else{
+  }
+  else{
       if(endMoving){          // Ya ha recorrido la distancia
          endMoving = false;   // Deja de moverse
          // Guarda la posición actual:
@@ -128,14 +130,14 @@ void loop(){
 //                                                FUNCIONES                                                  //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void parseBuffer(){ // Función que filtra lo que hay por el puerto serie
-  buffer =" "+buffer+" ";
+  buffer = " " + buffer + " ";
   buffer.toLowerCase();
 
   int count = 0;
   int startIndex = 0;
   int endIndex = 0;
   int len = buffer.length();
-  if (len < 1) {
+  if(len < 1){
     return;
   }
   String tmp;
@@ -225,18 +227,19 @@ void reset_stepper1(){
   int count_steps1 = 0;
   int count_steps2 = 0;
   steppers[1].setSpeed(testSpeed);
-  bool exit1=true;
-  bool exit2=true;
+  bool exit1 = true;
+  bool exit2 = true;
   
   while(exit1){
-    if(digitalRead(pin1)==LOW){
+    if(digitalRead(pin1) == LOW){
       steppers[1].step();
       delay(10);
       count_steps1++;
-    }else{
+    }
+    else{
       qlimit_1[0] = count_steps1*1.8/(GEAR_2*STEPS);
       Serial.println(qlimit_1[0]);
-      exit1=false;
+      exit1 = false;
     }
   }
   
@@ -244,14 +247,15 @@ void reset_stepper1(){
   delay(2000);
   
   while(exit2){
-    if(digitalRead(pin1)==LOW){
+    if(digitalRead(pin1) == LOW){
       steppers[1].step();
       delay(10);
       count_steps2++;
-    }else{
+    }
+    else{
       qlimit_1[1] = -(count_steps2-count_steps1)*1.8/(GEAR_2*STEPS);
       Serial.println(qlimit_1[1]);
-      exit2=false;
+      exit2 = false;
     }
   }
 
@@ -266,18 +270,19 @@ void reset_stepper2(){
   int count_steps1 = 0;
   int count_steps2 = 0;
   steppers[2].setSpeed(testSpeed);
-  bool exit1=true;
-  bool exit2=true;
+  bool exit1 = true;
+  bool exit2 = true;
   
   while(exit1){
-    if(digitalRead(pin2)==LOW){
+    if(digitalRead(pin2) == LOW){
       steppers[2].step();
       delay(10);
       count_steps1++;
-    }else{
+    }
+    else{
       qlimit_2[0] = qlimit_1[0] - count_steps1*1.8/(GEAR_2*STEPS);
       Serial.println(qlimit_2[0]);
-      exit1=false;
+      exit1 = false;
     }
   }
   
@@ -285,14 +290,15 @@ void reset_stepper2(){
   delay(2000);
   
   while(exit2){
-    if(digitalRead(pin2)==LOW){
+    if(digitalRead(pin2) == LOW){
       steppers[2].step();
       delay(10);
       count_steps2++;
-    }else{
+    }
+    else{
       qlimit_2[1] = -(qlimit_1[1] - (count_steps2-count_steps1)*1.8/(GEAR_2*STEPS));
       Serial.println(qlimit_2[1]);
-      exit2=false;
+      exit2 = false;
     }
   }
 
