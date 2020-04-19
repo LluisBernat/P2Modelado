@@ -310,10 +310,11 @@ void reset_stepper2(){
 
 // II. Movimiento en q1,q2,q3 (mueven los ejes del robot) /////////////////////////////////////////////////////
 void move_q1(float q1){ // q1 se introduce en grados
+  float p1;
   // Pasar q1 de Grados a Pasos
-  float p1 = Grad2Step(q1);
+  p1 = Grad2Step(q1);
   // Comprobar que estará en los límites establecidos
-  if( (steppers[0].currentPosition() + p1) < Grad2Step(qlimit_0[0]) && (steppers[0].currentPosition() + p1) > Grad2Step(qlimit_0[1]) ){
+  if((steppers[0].currentPosition() + p1) < Grad2Step(qlimit_0[0]) && (steppers[0].currentPosition() + p1) > Grad2Step(qlimit_0[1]) ){
     // Uso de la función steppers[n].moveTo(steps) para mover el eje
     steppers[0].moveTo(steppers[0].currentPosition() + p1);
     // Actualizar currentPosition con los pasos calculados
@@ -325,35 +326,42 @@ void move_q1(float q1){ // q1 se introduce en grados
 }
 
 void move_q2(float q2){ // q2 se introduce en grados
+  float p2;
   // Pasar q2 de Grados a Pasos
-  float p2 = Grad2Step(q2);
+  p2 = Grad2Step(q2);
   // Comprobar que estará en los límites establecidos
-  if( (steppers[1].currentPosition() + p2) < Grad2Step(qlimit_1[0]) && (steppers[1].currentPosition() + p2) > Grad2Step(qlimit_1[1]) && ( (steppers[1].currentPosition() + p2) - steppers[2].currentPosition()) < Grad2Step(qlimit_2[0]) %% ( (steppers[1].currentPosition() + p2) - steppers[2].currentPosition()) > Grad2Step(qlimit_2[1]) ){  
+  if((steppers[1].currentPosition() + p2) < Grad2Step(qlimit_1[0]) && (steppers[1].currentPosition() + p2) > Grad2Step(qlimit_1[1]) && ((steppers[1].currentPosition() + p2) - steppers[2].currentPosition()) < Grad2Step(qlimit_2[0]) && ((steppers[1].currentPosition() + p2) - steppers[2].currentPosition()) > Grad2Step(qlimit_2[1])){  
     // Uso de la función steppers[n].moveTo(steps) para mover el eje
     steppers[1].moveTo(steppers[1].currentPosition() + p2);
     // Actualizar currentPosition con los pasos calculados
     steppers[1].setCurrentPosition(steppers[1].currentPosition() + p2);
-    steppers[2].setCurrentPosition( (steppers[1].currentPosition() + p2) - steppers[2].currentPosition());
+    //q3f = q2 - q3
+    steppers[2].setCurrentPosition((steppers[1].currentPosition() + p2) - steppers[2].currentPosition());
       // Otra opcición: steppers[1].setCurrentPosition(steppers[1].targetPosition());
       //                steppers[2].setCurrentPosition(steppers[1].targetPosition() - steppers[2].currentPosition());
-  }else if( (steppers[1].currentPosition() + p2) > Grad2Step(qlimit_1[0]) && (steppers[1].currentPosition() + p2) < Grad2Step(qlimit_1[1]) ){
-    Serial.println("q3 fuera lo los límites del robot");
-  }else{
-    Serial.println("q2 fuera lo los límites del robot");
+  }
+  else{
+    if((steppers[1].currentPosition() + p2) > Grad2Step(qlimit_1[0]) || (steppers[1].currentPosition() + p2) < Grad2Step(qlimit_1[1]) ){
+      Serial.println("q2 fuera lo los límites del robot");
+    }else{
+      Serial.println("q3 fuera lo los límites del robot");
+    }
   }
 }
 
 void move_q3(float q3){ // q3 se introduce en grados
+  float p3;
   // Pasar q3 de Grados a Pasos
-  float p3 = Grad2Step(q3);
+  p3 = Grad2Step(q3);
   // Comprobar que estará en los límites establecidos
-  if( (steppers[1].currentPosition() - (steppers[2].currentPosition() + p3) ) < Grad2Step(qlimit_2[0]) && (steppers[1].currentPosition() - (steppers[2].currentPosition() + p3) ) > Grad2Step(qlimit_2[1]) ){
+  if((steppers[1].currentPosition() - (steppers[2].currentPosition() + p3) ) < Grad2Step(qlimit_2[0]) && (steppers[1].currentPosition() - (steppers[2].currentPosition() + p3) ) > Grad2Step(qlimit_2[1])){
     // Uso de la función steppers[n].moveTo(steps) para mover el eje
     steppers[2].moveTo(steppers[2].currentPosition() + p3);
     // Actualizar currentPosition con los pasos calculados
-    steppers[2].setCurrentPosition(steppers[1].currentPosition() - (steppers[2].currentPosition() + p3) );
+    steppers[2].setCurrentPosition(steppers[1].currentPosition() - (steppers[2].currentPosition() + p3));
       // Otra opcición: steppers[2].setCurrentPosition(steppers[1].currentPosition() - steppers[2].targetPosition());
-  }else{
+  }
+  else{
     Serial.println("q3 fuera lo los límites del robot");
   }
 }
