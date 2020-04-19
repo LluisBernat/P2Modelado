@@ -381,14 +381,20 @@ void moveToAngles(float q1, float q2, float q3){ // Los valores de q se introduc
 // IV. Punto inicial y vuelta a la posición de home ///////////////////////////////////////////////////////////
 // Establece/guarda la posición actual como Home (Home se entiende como la posición origen)
 void setHome(){
-  qlimit_0[0] = qlimit_0[0] - steppers[0].currentPosition();
-  qlimit_0[1] = qlimit_0[1] - steppers[0].currentPosition();
+  float p0, p1, p2;
   
-  qlimit_2[0] = qlimit_1[0] - steppers[1].currentPosition();
-  qlimit_2[1] = qlimit_1[1] - steppers[1].currentPosition();
+  p0 = Step2Grad(steppers[0].currentPosition());
+  p1 = Step2Grad(steppers[1].currentPosition());
+  p2 = Step2Grad(steppers[2].currentPosition());
   
-  qlimit_2[0] = qlimit_2[0] - steppers[2].currentPosition();
-  qlimit_2[1] = qlimit_2[1] - steppers[2].currentPosition();
+  qlimit_0[0] = qlimit_0[0] - p0;
+  qlimit_0[1] = qlimit_0[1] - p0;
+  
+  qlimit_2[0] = qlimit_1[0] - p1;
+  qlimit_2[1] = qlimit_1[1] - p1;
+  
+  qlimit_2[0] = qlimit_2[0] - p2;
+  qlimit_2[1] = qlimit_2[1] - p2;
 
   steppers[0].setCurrentPosition(0.0);
   steppers[1].setCurrentPosition(0.0);
