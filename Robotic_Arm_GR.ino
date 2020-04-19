@@ -448,8 +448,9 @@ Vector3 inverseKinematics(float x,float y,float z){
   Vector3 valArt;
 
   valArt.x = atan2(x,y);                                                                       // q1
-  valArt.z = acos((pow(z-L1,2)+pow(x,2)+pow(y,2)-pow(L2,2)-pow(L3,2))/(2*L2*L3))               // q3
-  valArt.y = atan2(sqrt(pow(x,2)+pow(y,2)),z-L1)-atan2(L3*sin(valArt.z),L2+L3*sin(valArt.z))   // q2
+  float aux = acos((pow(z-L1,2)+pow(x,2)+pow(y,2)-pow(L2,2)-pow(L3,2))/(2*L2*L3))              // q3f
+  valArt.y = atan2(sqrt(pow(x,2)+pow(y,2)),z-L1)-atan2(L3*sin(aux),L2+L3*sin(aux))             // q2
+  valArt.z = valArt.y - aux;                                                                   // q3
   
   return valArt;
 }
