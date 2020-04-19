@@ -14,7 +14,7 @@ MePort limitSwitch(PORT_7);
 Servo svs[1] = {Servo()};
 MeStepperOnBoard steppers[3] = {MeStepperOnBoard(PORT_1),MeStepperOnBoard(PORT_2),MeStepperOnBoard(PORT_3)}; 
 
-// Vectores para guardar los límites de las articulaciones que calcularemos
+// Vectores para guadrar los límites de las articulaciones que calcularemos
 float qlimit_0[2] = {0.0,0.0};
 float qlimit_1[2] = {0.0,0.0};
 float qlimit_2[2] = {0.0,0.0};
@@ -23,7 +23,7 @@ typedef struct{
   double x;
   double y; 
   double z;
-}Vector3;
+} Vector3;
 
 float lastPositions[3] = {0,0,0}; // Vector para meter el target de la posición
 const double RADS = PI / 180.0;   // Pasar de radianes a segundos
@@ -33,9 +33,9 @@ const int GEAR_1 = 9;             // Relaciones de transmisión (mecanismos engr
 const int GEAR_2 = 7;             // Relación de transmisiópn (mecanismos engranajes-eslabón) de los otros dos motores
 
 // Longitudes de los eslabones
-const double L1 = 150.0; 
-const double L2 = 155.0; 
-const double L3 = 200.0;
+const double L1 = 150.0; // mm
+const double L2 = 155.0; // mm
+const double L3 = 200.0; // mm
 const double Tz = -45.0;
 const double Tx = 65.0;
 
@@ -43,7 +43,7 @@ String buffer = "";
 bool endMoving = true;
 int sensor1, sensor2;
 
-Vector3 vectorToAngles(float x, float y, float z);
+Vector3 vectorToAngles(float x,float y,float z);
 void setSpeed(float speed);
 
 int testSpeed = 150;
@@ -64,7 +64,7 @@ void setup(){
   setSpeedConfiguration(currentSpeed,maxSpeed,currentAcceleration);
 
   // Configuración steppers
-  for(int i = 0; i < 3; i++){
+  for(int i=0;i<3;i++){
     steppers[i].setMicroStep(STEPS);  // MicroStep <-- 2
     steppers[i].enableOutputs();      // Habilito las salidas
   }
@@ -89,14 +89,13 @@ void setup(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void loop(){
   //Lectura del puerto serie y filtrado del comando
-  if(Serial.available()){
+  if (Serial.available()) {
      char c = Serial.read();  // Lee lo que hay en el puerto serial
-     if(c == '\n'){
+     if(c == '\n') {
       parseBuffer();          // Esta función lo filtra
-     }
-     else{
-      buffer = buffer + c;
-     }
+    }else{
+      buffer += c;
+    }
   }
 
   //Visualización finales de carrera (lee los sensores)
@@ -108,14 +107,13 @@ void loop(){
 
   //Permito corriente a los motores en un movimiento
   long isMoving = 0;
-  for(int i = 0; i < 3; i++){
-      isMoving = isMoving + abs(steppers[i].distanceToGo());  // Mientras "haya distancia a recorrer"
+  for(int i=0;i<3;i++){
+      isMoving += abs(steppers[i].distanceToGo());  // Mientras "haya distancia a recorrer"
       steppers[i].run();                            // Sigue moviendo el motor
   }
   if(isMoving>0){             // Aún no ha recorrido la distancia
       endMoving = true;       // Tiene que seguir moviéndose
-  }
-  else{
+  }else{
       if(endMoving){          // Ya ha recorrido la distancia
          endMoving = false;   // Deja de moverse
          // Guarda la posición actual:
@@ -130,14 +128,14 @@ void loop(){
 //                                                FUNCIONES                                                  //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void parseBuffer(){ // Función que filtra lo que hay por el puerto serie
-  buffer = " " + buffer + " ";
+  buffer =" "+buffer+" ";
   buffer.toLowerCase();
 
   int count = 0;
   int startIndex = 0;
   int endIndex = 0;
   int len = buffer.length();
-  if(len < 1){
+  if (len < 1) {
     return;
   }
   String tmp;
@@ -227,19 +225,18 @@ void reset_stepper1(){
   int count_steps1 = 0;
   int count_steps2 = 0;
   steppers[1].setSpeed(testSpeed);
-  bool exit1 = true;
-  bool exit2 = true;
+  bool exit1=true;
+  bool exit2=true;
   
   while(exit1){
-    if(digitalRead(pin1) == LOW){
+    if(digitalRead(pin1)==LOW){
       steppers[1].step();
       delay(10);
       count_steps1++;
-    }
-    else{
+    }else{
       qlimit_1[0] = count_steps1*1.8/(GEAR_2*STEPS);
       Serial.println(qlimit_1[0]);
-      exit1 = false;
+      exit1=false;
     }
   }
   
@@ -247,15 +244,14 @@ void reset_stepper1(){
   delay(2000);
   
   while(exit2){
-    if(digitalRead(pin1) == LOW){
+    if(digitalRead(pin1)==LOW){
       steppers[1].step();
       delay(10);
       count_steps2++;
-    }
-    else{
+    }else{
       qlimit_1[1] = -(count_steps2-count_steps1)*1.8/(GEAR_2*STEPS);
       Serial.println(qlimit_1[1]);
-      exit2 = false;
+      exit2=false;
     }
   }
 
@@ -270,19 +266,18 @@ void reset_stepper2(){
   int count_steps1 = 0;
   int count_steps2 = 0;
   steppers[2].setSpeed(testSpeed);
-  bool exit1 = true;
-  bool exit2 = true;
+  bool exit1=true;
+  bool exit2=true;
   
   while(exit1){
-    if(digitalRead(pin2) == LOW){
+    if(digitalRead(pin2)==LOW){
       steppers[2].step();
       delay(10);
       count_steps1++;
-    }
-    else{
+    }else{
       qlimit_2[0] = qlimit_1[0] - count_steps1*1.8/(GEAR_2*STEPS);
       Serial.println(qlimit_2[0]);
-      exit1 = false;
+      exit1=false;
     }
   }
   
@@ -290,15 +285,14 @@ void reset_stepper2(){
   delay(2000);
   
   while(exit2){
-    if(digitalRead(pin2) == LOW){
+    if(digitalRead(pin2)==LOW){
       steppers[2].step();
       delay(10);
       count_steps2++;
-    }
-    else{
+    }else{
       qlimit_2[1] = -(qlimit_1[1] - (count_steps2-count_steps1)*1.8/(GEAR_2*STEPS));
       Serial.println(qlimit_2[1]);
-      exit2 = false;
+      exit2=false;
     }
   }
 
@@ -310,11 +304,10 @@ void reset_stepper2(){
 
 // II. Movimiento en q1,q2,q3 (mueven los ejes del robot) /////////////////////////////////////////////////////
 void move_q1(float q1){ // q1 se introduce en grados
-  float p1;
   // Pasar q1 de Grados a Pasos
-  p1 = Grad2Step(q1);
+  float p1 = Grad2Step(q1);
   // Comprobar que estará en los límites establecidos
-  if((steppers[0].currentPosition() + p1) < Grad2Step(qlimit_0[0]) && (steppers[0].currentPosition() + p1) > Grad2Step(qlimit_0[1]) ){
+  if( (steppers[0].currentPosition() + p1) < Grad2Step(qlimit_0[0]) && (steppers[0].currentPosition() + p1) > Grad2Step(qlimit_0[1]) ){
     // Uso de la función steppers[n].moveTo(steps) para mover el eje
     steppers[0].moveTo(steppers[0].currentPosition() + p1);
     // Actualizar currentPosition con los pasos calculados
@@ -326,42 +319,35 @@ void move_q1(float q1){ // q1 se introduce en grados
 }
 
 void move_q2(float q2){ // q2 se introduce en grados
-  float p2;
   // Pasar q2 de Grados a Pasos
-  p2 = Grad2Step(q2);
+  float p2 = Grad2Step(q2);
   // Comprobar que estará en los límites establecidos
-  if((steppers[1].currentPosition() + p2) < Grad2Step(qlimit_1[0]) && (steppers[1].currentPosition() + p2) > Grad2Step(qlimit_1[1]) && ((steppers[1].currentPosition() + p2) - steppers[2].currentPosition()) < Grad2Step(qlimit_2[0]) && ((steppers[1].currentPosition() + p2) - steppers[2].currentPosition()) > Grad2Step(qlimit_2[1])){  
+  if( (steppers[1].currentPosition() + p2) < Grad2Step(qlimit_1[0]) && (steppers[1].currentPosition() + p2) > Grad2Step(qlimit_1[1]) && ( (steppers[1].currentPosition() + p2) - steppers[2].currentPosition()) < Grad2Step(qlimit_2[0]) %% ( (steppers[1].currentPosition() + p2) - steppers[2].currentPosition()) > Grad2Step(qlimit_2[1]) ){  
     // Uso de la función steppers[n].moveTo(steps) para mover el eje
     steppers[1].moveTo(steppers[1].currentPosition() + p2);
     // Actualizar currentPosition con los pasos calculados
     steppers[1].setCurrentPosition(steppers[1].currentPosition() + p2);
-    //q3f = q2 - q3
-    steppers[2].setCurrentPosition((steppers[1].currentPosition() + p2) - steppers[2].currentPosition());
+    steppers[2].setCurrentPosition( (steppers[1].currentPosition() + p2) - steppers[2].currentPosition());
       // Otra opcición: steppers[1].setCurrentPosition(steppers[1].targetPosition());
       //                steppers[2].setCurrentPosition(steppers[1].targetPosition() - steppers[2].currentPosition());
-  }
-  else{
-    if((steppers[1].currentPosition() + p2) > Grad2Step(qlimit_1[0]) || (steppers[1].currentPosition() + p2) < Grad2Step(qlimit_1[1]) ){
-      Serial.println("q2 fuera lo los límites del robot");
-    }else{
-      Serial.println("q3 fuera lo los límites del robot");
-    }
+  }else if( (steppers[1].currentPosition() + p2) > Grad2Step(qlimit_1[0]) && (steppers[1].currentPosition() + p2) < Grad2Step(qlimit_1[1]) ){
+    Serial.println("q3 fuera lo los límites del robot");
+  }else{
+    Serial.println("q2 fuera lo los límites del robot");
   }
 }
 
 void move_q3(float q3){ // q3 se introduce en grados
-  float p3;
   // Pasar q3 de Grados a Pasos
-  p3 = Grad2Step(q3);
+  float p3 = Grad2Step(q3);
   // Comprobar que estará en los límites establecidos
-  if((steppers[1].currentPosition() - (steppers[2].currentPosition() + p3) ) < Grad2Step(qlimit_2[0]) && (steppers[1].currentPosition() - (steppers[2].currentPosition() + p3) ) > Grad2Step(qlimit_2[1])){
+  if( (steppers[1].currentPosition() - (steppers[2].currentPosition() + p3) ) < Grad2Step(qlimit_2[0]) && (steppers[1].currentPosition() - (steppers[2].currentPosition() + p3) ) > Grad2Step(qlimit_2[1]) ){
     // Uso de la función steppers[n].moveTo(steps) para mover el eje
     steppers[2].moveTo(steppers[2].currentPosition() + p3);
     // Actualizar currentPosition con los pasos calculados
-    steppers[2].setCurrentPosition(steppers[1].currentPosition() - (steppers[2].currentPosition() + p3));
+    steppers[2].setCurrentPosition(steppers[1].currentPosition() - (steppers[2].currentPosition() + p3) );
       // Otra opcición: steppers[2].setCurrentPosition(steppers[1].currentPosition() - steppers[2].targetPosition());
-  }
-  else{
+  }else{
     Serial.println("q3 fuera lo los límites del robot");
   }
 }
@@ -372,29 +358,23 @@ void moveToAngles(float q1, float q2, float q3){ // Los valores de q se introduc
     move_q1(q1);
     move_q2(q2);
     move_q3(q3);
+  }else{
+    Serial.println("Los valores articualres no están dentro de los límites del robot");
   }
-  else{
-    Serial.println("Los valores articulares no están dentro de los límites del robot");
-  }
+  
 }
 
 // IV. Punto inicial y vuelta a la posición de home ///////////////////////////////////////////////////////////
 // Establece/guarda la posición actual como Home (Home se entiende como la posición origen)
 void setHome(){
-  float p0, p1, p2;
+  qlimit_0[0] = qlimit_0[0] - steppers[0].currentPosition();
+  qlimit_0[1] = qlimit_0[1] - steppers[0].currentPosition();
   
-  p0 = Step2Grad(steppers[0].currentPosition());
-  p1 = Step2Grad(steppers[1].currentPosition());
-  p2 = Step2Grad(steppers[2].currentPosition());
+  qlimit_2[0] = qlimit_1[0] - steppers[1].currentPosition();
+  qlimit_2[1] = qlimit_1[1] - steppers[1].currentPosition();
   
-  qlimit_0[0] = qlimit_0[0] - p0;
-  qlimit_0[1] = qlimit_0[1] - p0;
-  
-  qlimit_2[0] = qlimit_1[0] - p1;
-  qlimit_2[1] = qlimit_1[1] - p1;
-  
-  qlimit_2[0] = qlimit_2[0] - p2;
-  qlimit_2[1] = qlimit_2[1] - p2;
+  qlimit_2[0] = qlimit_2[0] - steppers[2].currentPosition();
+  qlimit_2[1] = qlimit_2[1] - steppers[2].currentPosition();
 
   steppers[0].setCurrentPosition(0.0);
   steppers[1].setCurrentPosition(0.0);
@@ -403,7 +383,7 @@ void setHome(){
 
 // Ir a la posición Home
 void goHome(){    
-  moveToAngles(HomeGrad.x,HomeGrad.y,HomeGrad,z);
+  moveToAngles(0.0,0.0,0.0);
 }
 
 // V. Cinemática directa. Movimiento en q1,q2,q3 (mueven los ejes del robot) //////////////////////////////////
@@ -456,7 +436,7 @@ Vector3 forwardKinematics (float q1, float q2, float q3){
  */
 
 // VI. Cinemática inversa. Movimiento en x,y,z ////////////////////////////////////////////////////////////////
-void moveToPoint(float x,float y,float z){
+void moveToPoint(float x,float y,float z){ // Coordenadas en mm
   Vector3 valArt = inverseKinematics(x,y,z);
   moveToAngles(valArt.x,valArt.y,valArt.z);
 }
@@ -477,8 +457,20 @@ void trajectory (float q1, float q2, float q3, float t){
 
 } 
 
-void pick_and_place (){
-
+void pick_and_place(){
+    // (Suponemos que inicialmente está en una posición cualquiera) 
+  // Nos aseguramos de que la pinza está abierta
+  open_grip();
+  // Movemos el axtremo a donde está el objeto (hemos puesto una posición aletaroia)
+  moveToPoint(50,30,70); // Sobreentedemos que los putnos deben estar dentro de los límites del robot
+  // Cerramos la pinza para coger el objeto
+  close_grip();
+  // Llevamos el objeto a la posición donde queremos dejarlo (hemos puesto una posición aletaroia)
+  moveToPoint(30,70,10); // Sobreentedemos que los putnos deben estar dentro de los límites del robot
+  // Abrimos la pinza para solat el objeto
+  open_grip();
+  // Hacemos que el robot vuelva a la posición Home
+  goHome();
 }
 
 // Otras funciones ////////////////////////////////////////////////////////////////////////////////////////////
