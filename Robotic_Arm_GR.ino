@@ -408,19 +408,17 @@ void goHome(){
 
 // V. Cinemática directa. Movimiento en q1,q2,q3 (mueven los ejes del robot) //////////////////////////////////
 // Función que devuelve la matriz de transformación T entre Si-1 y Si
-float[][] denavit(float q, float d, float a, float alfa){
-  float T[4][4] = {{cos(q),-cos(alfa)*sin(q),sin(alfa)*sin(q) ,a*cos(q)},
-                   {sin(q),cos(alfa)*cos(q) ,-sin(alfa)*cos(q),a*sen(q)},
-                   {0     ,sin(alfa)        ,cos(alfa)        ,d       },
-                   {0     ,0                ,0                ,1       }};
+float[][] denavit(float theta, float d, float a, float alfa){
+  float T[4][4] = {{cos(theta), -cos(alfa)*sin(theta),  sin(alfa)*sin(theta), a*cos(theta)},
+                   {sin(theta),  cos(alfa)*cos(theta), -sin(alfa)*cos(theta), a*sen(theta)},
+                   {0         ,       sin(alfa)      ,         cos(alfa)    ,     d       },
+                   {0         ,          0           ,            0         ,     1       }};
   return T;
 }
 
 // Función que utiliza la función denavit, para calcular 0T3 (base-extremo)
 Vector3 forwardKinematics (float q1, float q2, float q3){
   float q3f = q2 - q3;
-  float valArt[3][1] = {{q1},{q2},{q3f},{0}};
-  float result[3][1];
   float 0T1[4][4] = denavit(q1,L1,0,-90);
   float 1T2[4][4] = denavit(q2,0,L2,0);
   float 2T3[4][4] = denavit(q3f,0,L3,0);
@@ -430,10 +428,9 @@ Vector3 forwardKinematics (float q1, float q2, float q3){
   
   MatrixMult(0T1,1T2,4,4,4,aux);
   MatrixMult(aux,2T3,4,4,4,0T3);
-  MatrixMult(0T3,valArt,4,4,1,result);
-  extremo.x = result[0][0];
-  extremo.y = result[1][0];
-  extremo.z = result[2][0];
+  extremo.x = 0T3[0][3];
+  extremo.y = 0T3[1][3];
+  extremo.z = 0T3[2][3];
   
   return extremo;
 }
